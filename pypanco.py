@@ -142,9 +142,5 @@ class Panco(cmd.Cmd):
     def postloop(self):
         print    
 
-#xapi.op(cmd='show system info', cmd_xml=True)
-#print(xapi.xml_result())
-#xapi.op(cmd='request restart system', cmd_xml=True)
-
 if __name__ == '__main__':
     Panco().cmdloop()
