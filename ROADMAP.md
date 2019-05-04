@@ -1,7 +1,7 @@
 ### [Doc](https://pymotw.com/2/cmd/)
 
 - *complete_* to get list of fw IP addresses ir names
-- last_output = '' self.last_output
+- *last_output* = '' *self.last_output*
 - Commands from sys.argv
     ```
     import sys
