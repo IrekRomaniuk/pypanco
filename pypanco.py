@@ -19,9 +19,12 @@ tz = {}
 tz['US'] = 'US/Eastern'
 
 class Panco(cmd.Cmd):
-    """Palo Alto credential, can be modified by using an external encrypted list"""
+    """Palo Alto Network toolset"""
+
+    prompt = '(Panco) '
+    intro = "Palo Alto Network toolset"
     def _get_pan_credentials(self, hostname, username,password):
-        """Get credentials"""
+        """Get credentials """
         cred = {}
         cred['api_username'] = username
         cred['api_password'] = password
@@ -44,8 +47,10 @@ class Panco(cmd.Cmd):
         except pan.xapi.PanXapiError as e:
             print("{error}".format(error=e))
             return False
-        if len(args) > 3:
-            print(xapi.xml_result())
+        if xapi.status == 'success' and len(args) > 3:
+            soup = BeautifulSoup(xapi.xml_result(),'html.parser')
+            for line in soup.find_all('version'):
+                print(line.get_text())    
 
     def do_download_soft(self, arguments):
         """download_soft [version] [hostname] [username] [password]
@@ -55,7 +60,7 @@ class Panco(cmd.Cmd):
         if len(args) < 4:
             print ("More arguments required")
             return False
-        version, hostname, username, password = args[:4]
+        version, hostname, username, password = args[:3]
         xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username, password))
         print('Preparing to download software {version} on {hostname} with {username} and {password}...'.format(hostname=hostname, version=version, username=username, password=password[:2]))
         try:
@@ -68,9 +73,16 @@ class Panco(cmd.Cmd):
             for line in soup.find_all('line'):
                 print(line.get_text())
     
-    #device configuration setting only time
-    def do_set_time(timezone,ntp_primary,ntp_secondary):
-        """Set time"""
+    def do_set_time(self, arguments):
+        """set_time [hostname] [username] [password]
+        timezone='US/Eastern',ntp_primary='10.34.21.215',ntp_secondary='10.41.21.215'
+        """
+        args = shlex.split(arguments)
+        if len(args) < 3:
+            print ("More arguments required")
+            return False
+        timezone, ntp_primary, ntp_secondary= 'US/Eastern','10.34.21.215', '10.41.21.215'
+        hostname, username, password = args[:3]
         deviceconfig = """
         <timezone>{}</timezone>
         <ntp-servers>
@@ -81,11 +93,22 @@ class Panco(cmd.Cmd):
                 <ntp-server-address>{}</ntp-server-address>
             </secondary-ntp-server>
         </ntp-servers>
-    """.format(timezone,ntp_primary,ntp_secondary)
-        return deviceconfig
+        """.format(timezone,ntp_primary,ntp_secondary)
+        xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username, password))
+        xapi.set(xpath=deviceconfig_system_xpath,element=deviceconfig)
+        time.sleep(3)
+        print(xapi.status)
+        time.sleep(3)
+        #return deviceconfig
+        print("Commiting... timezone: {timezone} ntp: {ntp_primary} and  {ntp_secondary}".format(timezone=timezone,ntp_primary=ntp_primary,ntp_secondary=ntp_secondary))
+        xapi.commit(cmd="<commit></commit>",timeout=10)
+        print(xapi.status)
     
     def do_EOF(self, line):
         return True
+
+    def postloop(self):
+        print    
 
                 
 #config = set_time(tz['US'],'10.34.21.215','10.41.21.215')
@@ -103,8 +126,6 @@ class Panco(cmd.Cmd):
 #xapi.op(cmd='show system info', cmd_xml=True)
 #print(xapi.xml_result())
 #xapi.op(cmd='request restart system', cmd_xml=True)
-#xapi.op(cmd='<request><system><software><download><version>9.0.0</version></download></software></system></request>', cmd_xml=False)
-#print(xapi.status)
 
 if __name__ == '__main__':
     Panco().cmdloop()
