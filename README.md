@@ -2,15 +2,24 @@
 Palo Alto Network toolset cmd based on pan-python
 
 ```
+$ python pypanco.py
+Palo Alto Network toolset
+(Panco)Ctrl-D
+```
+
+### help
+
+```
 python pypanco.py
-(Cmd) help
+Palo Alto Network toolset
+(Panco) help
 
 Documented commands (type help <topic>):
-========================================
-check_soft  download_soft  help  set_time
+----------------------------------------
+check_soft  download_soft  help  set_time  show_job
 
 Undocumented commands:
-======================
+----------------------
 EOF
 ```
 ### download_soft
