@@ -23,6 +23,11 @@ class Panco(cmd.Cmd):
 
     prompt = '(Panco) '
     intro = "Palo Alto Network toolset"
+    #doc_header = 'doc_header'
+    #misc_header = 'misc_header'
+    #undoc_header = 'undoc_header'
+    ruler = '-'
+
     def _get_pan_credentials(self, hostname, username,password):
         """Get credentials """
         cred = {}
@@ -60,7 +65,7 @@ class Panco(cmd.Cmd):
         if len(args) < 4:
             print ("More arguments required")
             return False
-        version, hostname, username, password = args[:3]
+        version, hostname, username, password = args[:4]
         xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username, password))
         print('Preparing to download software {version} on {hostname} with {username} and {password}...'.format(hostname=hostname, version=version, username=username, password=password[:2]))
         try:
@@ -104,24 +109,38 @@ class Panco(cmd.Cmd):
         xapi.commit(cmd="<commit></commit>",timeout=10)
         print(xapi.status)
     
+    #option for cmd help
+    def help_set_time(self):
+        print '\n'.join([ 'set_time [hostname] [username] [password]',
+                        "timezone='US/Eastern',ntp_primary='10.34.21.215',ntp_secondary='10.41.21.215'"
+                           ])
+
+    def do_show_job(self, arguments):
+        """show_job [jobid] [hostname] [username] [password]
+
+        Show job [jobid] on [hostname]  with [username] and [password]"""
+        args = shlex.split(arguments)
+        if len(args) < 4:
+            print ("More arguments required")
+            return False
+        jobid, hostname, username, password = args[:4]
+        print('Looking for jobid {jobid} on {hostname} with {username} and {password}...'.format(jobid=jobid, hostname=hostname, username=username, password=password[:2]))
+        xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username, password))
+        try:
+            xapi.op(cmd='show jobs id "'+jobid+'"', cmd_xml=True)
+        except pan.xapi.PanXapiError as e:
+            print("{error}".format(error=e))
+            return False
+        if xapi.status == 'success':
+            soup = BeautifulSoup(xapi.xml_result(),'html.parser')
+            for line in soup.find_all('result'):
+                print(line.get_text())
+
     def do_EOF(self, line):
         return True
 
     def postloop(self):
         print    
-
-                
-#config = set_time(tz['US'],'10.34.21.215','10.41.21.215')
- 
-#shoud use try and except, if status code is error then break exit with error code.
-#this is a demo hence not as good on error handling.
-    #xapi = pan.xapi.PanXapi(**get_pan_credentials(sys.argv[2],sys.argv[3]))
-#xapi.set(xpath=deviceconfig_system_xpath,element=config)
-#time.sleep(3)
-#print(xapi.status)
-#time.sleep(3)
-#xapi.commit(cmd="<commit></commit>",timeout=10)
-#print(xapi.status)
 
 #xapi.op(cmd='show system info', cmd_xml=True)
 #print(xapi.xml_result())
