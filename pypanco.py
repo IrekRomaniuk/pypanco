@@ -57,7 +57,7 @@ class Panco(cmd.Cmd):
             return False
         version, hostname, username, password = args[:4]
         xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username, password))
-        print('Downloading software {version} on {hostname} with {username} and {password}...'.format(hostname=hostname, version=version, username=username, password=password[:2]))
+        print('Preparing to download software {version} on {hostname} with {username} and {password}...'.format(hostname=hostname, version=version, username=username, password=password[:2]))
         try:
             xapi.op(cmd='<request><system><software><download><version>'+version+'</version></download></software></system></request>', cmd_xml=False)
         except pan.xapi.PanXapiError as e:

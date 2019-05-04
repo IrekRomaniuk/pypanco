@@ -13,6 +13,7 @@ Undocumented commands:
 ======================
 EOF
 ```
+### download_soft
 
 ```
 (Cmd) download_soft 9.0.0 10.1.3.7 admin n3w@y!n
