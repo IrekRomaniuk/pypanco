@@ -136,6 +136,50 @@ class Panco(cmd.Cmd):
             for line in soup.find_all('result'):
                 print(line.get_text())
 
+    def do_show_system(self, arguments):
+        """show_system [tag] [hostname] [username] [password]
+
+        Show system [tag] on [hostname]  with [username] and [password]
+        Tags: sw-version, uptime, hostname, ip-address, multi-vsys, operational-mode, devicename,
+            serial, vm-uuid, vm-cpuid, vm-license, vm-mode, threat-version, wildfire-version """
+        args = shlex.split(arguments)
+        if len(args) < 4:
+            print ("More arguments required")
+            return False
+        tag, hostname, username, password = args[:4]
+        print('System info tag {tag} on {hostname} with {username} and {password}...'.format(tag=tag, hostname=hostname, username=username, password=password[:2]))
+        xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username, password))
+        try:
+            xapi.op(cmd='show system info', cmd_xml=True)
+        except pan.xapi.PanXapiError as e:
+            print("{error}".format(error=e))
+            return False
+        if xapi.status == 'success':
+            soup = BeautifulSoup(xapi.xml_result(),'html.parser')
+            for line in soup.find_all(tag):
+                print(line.get_text())    
+
+    def do_upgrade_soft(self, arguments):
+        """upgrade_soft [version] [hostname] [username] [password]
+
+        Upgrade software [version] on [hostname] with [username] and [password]"""
+        args = shlex.split(arguments)
+        if len(args) < 4:
+            print ("More arguments required")
+            return False
+        version, hostname, username, password = args[:4]
+        xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username, password))
+        print('Preparing to download software {version} on {hostname} with {username} and {password}...'.format(hostname=hostname, version=version, username=username, password=password[:2]))
+        try:
+            xapi.op(cmd='<request><system><software><install><version>'+version+'</version></install></software></system></request>', cmd_xml=False)
+        except pan.xapi.PanXapiError as e:
+            print("{error}".format(error=e))
+            return False
+        if xapi.status == 'success':
+            soup = BeautifulSoup(xapi.xml_result(),'html.parser')
+            for line in soup.find_all('line'):
+                print(line.get_text())                    
+
     def do_EOF(self, line):
         return True
 
