@@ -178,7 +178,29 @@ class Panco(cmd.Cmd):
         if xapi.status == 'success':
             soup = BeautifulSoup(xapi.xml_result(),'html.parser')
             for line in soup.find_all('line'):
-                print(line.get_text())                    
+                print(line.get_text())   
+
+    def do_set_panorama(self, arguments):
+        """set_panorama [panorama] [hostname] [username] [password]
+        Setup Panorama Servers on firewalls
+        """
+        args = shlex.split(arguments)
+        if len(args) < 4:
+            print ("More arguments required")
+            return False
+        panorama, hostname, username, password = args[:4]
+        deviceconfig = """
+        <panorama-server>{}</panorama-server>
+        """.format(panorama)
+        xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username, password))
+        xapi.set(xpath=deviceconfig_system_xpath,element=deviceconfig)
+        time.sleep(3)
+        print(xapi.status)
+        time.sleep(3)
+        #return deviceconfig
+        print("Commiting... Panorama: {panorama} on {hostname}".format(panorama=panorama, hostname= hostname))
+        xapi.commit(cmd="<commit></commit>",timeout=10)
+        print(xapi.status)                             
 
     def do_EOF(self, line):
         return True
