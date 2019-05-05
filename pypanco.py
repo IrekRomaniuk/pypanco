@@ -18,56 +18,65 @@ class Panco(cmd.Cmd):
     """Palo Alto Network toolset"""
 
     prompt = '(Panco) '
-    intro = "Palo Alto Network toolset"
+    intro = "Palo Alto Network toolset, remember to setup credentails (cred [user] [pass])"
     #doc_header = 'doc_header'
     #misc_header = 'misc_header'
     #undoc_header = 'undoc_header'
     ruler = '-'
-    password=''
+    username = ''
+    password = ''    
 
-    def do_set_pass(self, password):
-        self.password=password
-
-    def _get_pan_credentials(self, hostname, username):
+    def _get_pan_credentials(self, hostname):
         """Get credentials """
         cred = {}
-        cred['api_username'] = username
+        cred['api_username'] = self.username
         cred['api_password'] = self.password
         cred['hostname'] = hostname
         return cred
 
-    def do_check_soft(self, arguments):
-        """check_soft [hostname] [username]
-
-        Check software on [hostname]  with [username]"""
-        args = shlex.split(arguments)
-        if len(args) < 2 or not self.password:
+    def do_cred(self, arguments):
+        """Setup credentials cred  [username] [password]""" 
+        args = shlex.split(arguments)       
+        if len(args) < 2:
             print ("More arguments required")
+            return False   
+        username, password = args[:2]    
+        self.username = username   
+        self.password = password
+        print("Credentials for {username} setup".format(username = username))
+        
+    def do_check_soft(self, arguments):
+        """check_soft [hostname]
+
+        Check software on [hostname]"""
+        args = shlex.split(arguments)
+        if len(args) < 1 or not self.password or not self.username:
+            print ("More arguments required  or credentials not set (cred [user] [pass])")
             return False
-        hostname, username = args[:2]
-        self._set_command('<request><system><software><check></check></software></system></request>', False, hostname, username, 'version')   
+        hostname = args[0]
+        self._set_command('<request><system><software><check></check></software></system></request>', False, hostname, 'version')   
 
     def do_download_soft(self, arguments):
-        """download_soft [version] [hostname] [username]
+        """download_soft [version] [hostname]
 
-        Download software [version] on [hostname] with [username]"""
+        Download software [version] on [hostname]"""
         args = shlex.split(arguments)
-        if len(args) < 3  or not self.password:
-            print ("More arguments required")
+        if len(args) < 2  or not self.password or not self.username:
+            print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
-        version, hostname, username= args[:3]
-        self._set_command('<request><system><software><download><version>'+version+'</version></download></software></system></request>', False, hostname, username, 'line')
+        version, hostname= args[:2]
+        self._set_command('<request><system><software><download><version>'+version+'</version></download></software></system></request>', False, hostname, 'line')
     
     def do_set_time(self, arguments):
-        """set_time [hostname] [username]
+        """set_time [hostname]
         timezone='US/Eastern',ntp_primary='10.34.21.215',ntp_secondary='10.41.21.215'
         """
         args = shlex.split(arguments)
-        if len(args) < 2  or not self.password:
-            print ("More arguments required")
+        if len(args) < 1  or not self.password or not self.username:
+            print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
         timezone, ntp_primary, ntp_secondary= 'US/Eastern','10.34.21.215', '10.41.21.215'
-        hostname, username = args[:2]
+        hostname = args[0]
         config = """
         <timezone>{}</timezone>
         <ntp-servers>
@@ -79,77 +88,77 @@ class Panco(cmd.Cmd):
             </secondary-ntp-server>
         </ntp-servers>
         """.format(timezone,ntp_primary,ntp_secondary)
-        self._set_config(config, hostname, username)        
+        self._set_config(config, hostname)        
     
     #option for cmd help
     def help_set_time(self):
-        print '\n'.join([ 'set_time [hostname] [username]',
+        print '\n'.join([ 'set_time [hostname]',
                         "timezone='US/Eastern',ntp_primary='10.34.21.215',ntp_secondary='10.41.21.215'"
                            ])
 
     def do_show_job(self, arguments):
-        """show_job [jobid] [hostname] [username]
+        """show_job [jobid] [hostname]
 
-        Show job [jobid] on [hostname]  with [username]"""
+        Show job [jobid] on [hostname]"""
         args = shlex.split(arguments)
-        if len(args) < 3  or not self.password:
-            print ("More arguments required")
+        if len(args) < 2  or not self.password or not self.username:
+            print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
-        jobid, hostname, username = args[:3]
-        self._set_command('show jobs id "'+jobid+'"', True, hostname, username, 'result')
+        jobid, hostname = args[:2]
+        self._set_command('show jobs id "'+jobid+'"', True, hostname, 'result')
 
     def do_show_system(self, arguments):
-        """show_system [tag] [hostname] [username]
+        """show_system [tag] [hostname] 
 
-        Show system [tag] on [hostname]  with [username]
+        Show system [tag] on [hostname]
         Tags: sw-version, uptime, hostname, ip-address, multi-vsys, operational-mode, devicename,
-            serial, vm-uuid, vm-cpuid, vm-license, vm-mode, threat-version, wildfire-version """
+            serial, vm-uuid, vm-cpuid, vm-license, vm-mode, threat-version, wildfire-version """   
         args = shlex.split(arguments)
-        if len(args) < 3 or not self.password:
-            print ("More arguments required or password not set (set_pass password)")
+        if len(args) < 2 or not self.password or not self.username:
+            print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
-        tag, hostname, username = args[:3]
-        self._set_command('show system info', True, hostname, username, tag)        
+        tag, hostname= args[:2]
+        self._set_command('show system info', True, hostname, tag)        
 
     def do_upgrade_soft(self, arguments):
-        """upgrade_soft [version] [hostname] [username]
+        """upgrade_soft [version] [hostname]
 
-        Upgrade software [version] on [hostname] with [username]"""
+        Upgrade software [version] on [hostname]"""
         args = shlex.split(arguments)
-        if len(args) < 3  or not self.password:
-            print ("More arguments required")
+        if len(args) < 2  or not self.password or not self.username:
+            print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
-        version, hostname, username = args[:3]
-        self._set_command('<request><system><software><install><version>'+version+'</version></install></software></system></request>', False, hostname, username, 'line') 
+        version, hostname = args[:2]
+        self._set_command('<request><system><software><install><version>'+version+'</version></install></software></system></request>', False, hostname, 'line') 
 
     def do_set_panorama(self, arguments):
-        """set_panorama [panorama] [hostname] [username]
+        """set_panorama [panorama] [hostname]
         Setup Panorama Servers on firewalls
         """
         args = shlex.split(arguments)
-        if len(args) < 3  or not self.password:
-            print ("More arguments required")
+        if len(args) < 2  or not self.password or not self.username:
+            print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
-        panorama, hostname, username,= args[:3]
+        panorama, hostname= args[:2]
         config = """
         <panorama-server>{}</panorama-server>
         """.format(panorama)
-        self._set_config(config, hostname, username)
+        self._set_config(config, hostname)
 
 
-    def _set_config(self, config, hostname, username):        
-        xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username))
+    def _set_config(self, config, hostname):        
+        xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname))
         xapi.set(xpath=deviceconfig_system_xpath,element=config)
         time.sleep(3)
         print(xapi.status)
         time.sleep(1)
-        print("Applying config on {hostname} with {username} and {password}...".format(hostname= hostname, username= username, password=self.password[:1]))
+        print("Applying config on {hostname} with user {username} and password {password}...".format(hostname=hostname, username=self.username, password=self.password[:1]))
         xapi.commit(cmd="<commit></commit>",timeout=10)
         print(xapi.status)     
 
-    def _set_command(self, command, cmd_xml, hostname, username, tag):  
-        xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname, username))
-        print('Running command on {hostname} with {username} and {password}...'.format(hostname=hostname, username=username, password=self.password[:1]))
+    def _set_command(self, command, cmd_xml, hostname, tag):  
+        xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname))
+        print('Running command on {hostname} with user {username} and password {password}...'.format(hostname=hostname, username=self.username, password=self.password[:1]))
         try:
             xapi.op(cmd=command, cmd_xml=cmd_xml)
         except pan.xapi.PanXapiError as e:
