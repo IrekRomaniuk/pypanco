@@ -11,6 +11,9 @@ https://cyruslab.net/2017/11/12/pythonworking-with-palo-alto-firewall-api-with-p
 import pan.xapi,time, sys, cmd, shlex
 from pandevice.base import PanDevice, pandevice
 from bs4 import BeautifulSoup
+import requests, urllib3
+#from requests.adapters import HTTPAdapter
+#from requests.packages.urllib3.util.retry import Retry
 
 #xpath can be navigated on PAN OS on this path https://firewall_ip/api/
 deviceconfig_system_xpath = "/config/devices/entry[@name='localhost.localdomain']/deviceconfig/system"
@@ -189,8 +192,59 @@ class Panco(cmd.Cmd):
             print ("More arguments required (.i.e. tag: sw-version) or credentials not set (cred [user] [pass])")
             return False
         hostname= args[0]    
-        self._set_command('request restart system', True, hostname, 'line')      
+        self._set_command('request restart system', True, hostname, 'line') 
 
+    def do_waitfor_url(self, arguments):
+        """waitfor_portal [hostname] [sleep] [timeout]
+
+        Wait [timeout] until portal on [hostname] available and verify login every [sleep]"""   
+        args = shlex.split(arguments)
+        
+        if len(args) == 1:
+            hostname = args[0]
+            sleep, timeout = 3, 1
+        elif len(args) <= 2 or not self.password or not self.username:
+            print ("More arguments required or credentials not set (cred [user] [pass])")
+            return False
+        elif len(args) > 2:
+            sleep, timeout, hostname= args[:3] 
+
+        url ='https://'+hostname
+        sess = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=10)
+        sess.mount('http://', adapter)
+        response = self._get_url(url, int(sleep), int(timeout)) # try url, sleep 3s, timeout is 1min
+        if response == False:
+            print("No Response from {url}".format(url=url))
+        elif response.status_code == 200:   
+            print("Portal {url} is up and running".format(url=url))
+        else:     
+            print("Response from {url} is: {response}".format(url=url, response=response.status_code ))
+           
+
+    def _get_url(self, url, sleep, timeout):
+        timeout = time.time() + 60*timeout
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        #https://www.reddit.com/r/learnpython/comments/2hpgja/requests_error_max_retries_i_wish_to_wait_and_try/
+        response = False
+        while True:
+            if time.time() > timeout:
+                break
+            try:
+                response = requests.get(url, verify=False, auth=(self.username, self.password))  
+                if response.status_code == 200:
+                    return response
+            except requests.exceptions:
+                print("Sleeping for {sleep}s...Remaining {remained}s".format(sleep=sleep, remained=int(timeout-time.time())))
+                time.sleep(sleep)
+            except requests.exceptions.RequestException as e:
+                #print("{error}".format(error=e))
+                print("No Response: Sleeping for {sleep}s...Remaining {remained}s".format(sleep=sleep, remained=int(timeout-time.time())))
+                time.sleep(sleep) 
+            if  response != False:  #and response.status_code != 200:   
+                print("Up but not auth, sleeping for {sleep}s...Remaining {remained}s".format(sleep=sleep, remained=int(timeout-time.time())))
+                time.sleep(sleep)   
+        return response    
 
     def _set_config(self, config, hostname):        
         xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname))
