@@ -10,13 +10,16 @@ Palo Alto Network toolset
 ### help
 
 ```
-python pypanco.py
-Palo Alto Network toolset
+Palo Alto Network toolset, remember to setup credentails (cred [user] [pass])
+
+
 (Panco) help
 
 Documented commands (type help <topic>):
 ----------------------------------------
-check_soft  download_soft  help  set_time  show_job
+check_soft     help          set_time     upgrade_soft
+cred           restart       show_job     upgrade_soft_pandevice
+download_soft  set_panorama  show_system
 
 Undocumented commands:
 ----------------------
