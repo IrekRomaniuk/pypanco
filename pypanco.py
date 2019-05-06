@@ -160,9 +160,10 @@ class Panco(cmd.Cmd):
         device = PanDevice.create_from_device(hostname, self.username, self.password,)
         try:
             device.software.upgrade_to_version(version, dryrun)
-        except pandevice.errors.PanDeviceError as e:
+        #.PanDeviceError, .PanURLError
+        except (pandevice.errors.PanDeviceError, pandevice.errors.PanURLError) as e:
             print("{error}".format(error=e))
-            return False
+            return False   
 
     def do_set_panorama(self, arguments):
         """set_panorama [panorama] [hostname]
