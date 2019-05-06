@@ -23,8 +23,16 @@ class Panco(cmd.Cmd):
     #misc_header = 'misc_header'
     #undoc_header = 'undoc_header'
     ruler = '-'
+
     username = ''
-    password = ''    
+    password = ''
+       
+    """
+    def __init__(self, *args, **kwargs):
+        super(Panco, self).__init__(*args, **kwargs)
+        self.username = ''
+        self.password = ''
+    """    
 
     def _get_pan_credentials(self, hostname):
         """Get credentials """
@@ -114,10 +122,16 @@ class Panco(cmd.Cmd):
         Tags: sw-version, uptime, hostname, ip-address, multi-vsys, operational-mode, devicename,
             serial, vm-uuid, vm-cpuid, vm-license, vm-mode, threat-version, wildfire-version """   
         args = shlex.split(arguments)
-        if len(args) < 2 or not self.password or not self.username:
-            print ("More arguments required or credentials not set (cred [user] [pass])")
+        
+        if len(args) == 1:
+            hostname = args[0]
+            tag = 'sw-version'
+        elif len(args) < 2 or not self.password or not self.username:
+            print ("More arguments required (.i.e. tag: sw-version) or credentials not set (cred [user] [pass])")
             return False
-        tag, hostname= args[:2]
+        else:
+            tag, hostname= args[:2]
+            
         self._set_command('show system info', True, hostname, tag)        
 
     def do_upgrade_soft(self, arguments):
