@@ -99,6 +99,6 @@ Running command on 1.1.1.1 with user admin and password p...
 ### upgrade_soft_pandevice
 
 ```
-(Panco) upgrade_soft_pandevice 8.1.7 10.41.2.20
-Device 007901004626 attempt to install content version latest failed: ['Failed to update content with following message: encfilesize is 48722240\nNo threat content update is applied. No valid Threat prevention license.\nexiting with 255\n']
+(Panco) upgrade_soft_pandevice 8.1.7 10.111.2.20
+Device xxxx attempt to install content version latest failed: ['Failed to update content with following message: encfilesize is 48722240\nNo threat content update is applied. No valid Threat prevention license.\nexiting with 255\n']
 ```
