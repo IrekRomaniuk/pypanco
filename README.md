@@ -102,3 +102,17 @@ Running command on 1.1.1.1 with user admin and password p...
 (Panco) upgrade_soft_pandevice 8.1.7 10.111.2.20
 Device xxxx attempt to install content version latest failed: ['Failed to update content with following message: encfilesize is 48722240\nNo threat content update is applied. No valid Threat prevention license.\nexiting with 255\n']
 ```
+
+### waitfor_url 
+
+```
+(Panco) waitfor_url 30 5 10.44.2.20
+No Response: Sleeping for 30s...Remaining 298
+No Response: Sleeping for 30s...Remaining 267
+No Response: Sleeping for 30s...Remaining 216
+No Response: Sleeping for 30s...Remaining 165
+Up but not auth, sleeping for 30s...Remaining 132
+Up but not auth, sleeping for 30s...Remaining 102
+Portal https://10.41.2.20 is up and running
+(Panco)
+```
