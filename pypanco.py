@@ -9,6 +9,7 @@ https://cyruslab.net/2017/11/12/pythonworking-with-palo-alto-firewall-api-with-p
 """
 
 import pan.xapi,time, sys, cmd, shlex
+from pandevice.base import PanDevice, pandevice
 from bs4 import BeautifulSoup
 
 #xpath can be navigated on PAN OS on this path https://firewall_ip/api/
@@ -18,7 +19,7 @@ class Panco(cmd.Cmd):
     """Palo Alto Network toolset"""
 
     prompt = '(Panco) '
-    intro = "Palo Alto Network toolset, remember to setup credentails (cred [user] [pass])"
+    intro = "Palo Alto Network toolset, remember to setup credentails (cred [user] [pass])\n\n"
     #doc_header = 'doc_header'
     #misc_header = 'misc_header'
     #undoc_header = 'undoc_header'
@@ -137,13 +138,31 @@ class Panco(cmd.Cmd):
     def do_upgrade_soft(self, arguments):
         """upgrade_soft [version] [hostname]
 
-        Upgrade software [version] on [hostname]"""
+        Upgrade software [version] using pan-python on [hostname]"""
         args = shlex.split(arguments)
         if len(args) < 2  or not self.password or not self.username:
             print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
         version, hostname = args[:2]
         self._set_command('<request><system><software><install><version>'+version+'</version></install></software></system></request>', False, hostname, 'line') 
+
+    def do_upgrade_soft_pandevice(self, arguments):
+        """upgrade_soft_pandevice [version] [hostname] [dryrun]
+
+        Upgrade software [version] using pandevice on [hostname]
+        When dryrun is 'store_true', print what would happen, but don't perform upgrades"""
+        args = shlex.split(arguments)
+        if len(args) < 2  or not self.password or not self.username:
+            print ("More arguments required or credentials not set (cred [user] [pass])")
+            return False
+        dryrun =  'store_true'
+        version, hostname = args[:2]
+        device = PanDevice.create_from_device(hostname, self.username, self.password,)
+        try:
+            device.software.upgrade_to_version(version, dryrun)
+        except pandevice.errors.PanDeviceError as e:
+            print("{error}".format(error=e))
+            return False
 
     def do_set_panorama(self, arguments):
         """set_panorama [panorama] [hostname]

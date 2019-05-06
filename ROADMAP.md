@@ -1,8 +1,7 @@
 ### [Doc](https://pymotw.com/2/cmd/)
 
-- Try same precomamnd and postcommand (or call function for DRY code)
-- Autocompletion *complete_* to get list of fw IP addresses or names
-- *last_output* = '' *self.last_output*
+- Autocompletion *complete_* to get list of fw IP addresses or names or tags
+- *last_output* = '' *self.last_output* for jobid
 - Commands from sys.argv
     ```
     import sys
