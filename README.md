@@ -1,5 +1,5 @@
 # pypanco
-Palo Alto Network toolset based on pan-python
+Palo Alto Network toolset based on pan-python an pandevice
 
 ```
 $ python pypanco.py
