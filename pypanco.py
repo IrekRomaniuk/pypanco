@@ -126,7 +126,7 @@ class Panco(cmd.Cmd):
         if len(args) == 1:
             hostname = args[0]
             tag = 'sw-version'
-        elif len(args) < 2 or not self.password or not self.username:
+        elif len(args) < 1 or not self.password or not self.username:
             print ("More arguments required (.i.e. tag: sw-version) or credentials not set (cred [user] [pass])")
             return False
         else:
@@ -158,6 +158,18 @@ class Panco(cmd.Cmd):
         <panorama-server>{}</panorama-server>
         """.format(panorama)
         self._set_config(config, hostname)
+
+    def do_restart(self, arguments):
+        """restart [hostname] 
+
+        Restart [hostname]"""   
+        args = shlex.split(arguments)
+        
+        if len(args) < 1 or not self.password or not self.username:
+            print ("More arguments required (.i.e. tag: sw-version) or credentials not set (cred [user] [pass])")
+            return False
+        hostname= args[0]    
+        self._set_command('request restart system', True, hostname, 'line')      
 
 
     def _set_config(self, config, hostname):        
