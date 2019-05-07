@@ -8,7 +8,7 @@ https://cyruslab.net/2017/11/12/pythonworking-with-palo-alto-firewall-api-with-p
 
 """
 
-import pan.xapi,time, sys, cmd, shlex
+import pan.xapi,time, sys, cmd, shlex, re
 from pandevice.base import PanDevice, pandevice
 from bs4 import BeautifulSoup
 import requests, urllib3
@@ -28,8 +28,7 @@ class Panco(cmd.Cmd):
     #undoc_header = 'undoc_header'
     ruler = '-'
 
-    username = ''
-    password = ''
+    username, password, hostname, jobid = '', '', '', ''
        
     """
     def __init__(self, *args, **kwargs):
@@ -66,7 +65,7 @@ class Panco(cmd.Cmd):
             print ("More arguments required  or credentials not set (cred [user] [pass])")
             return False
         hostname = args[0]
-        self._set_command('<request><system><software><check></check></software></system></request>', False, hostname, 'version')   
+        self._set_command('<request><system><software><check></check></software></system></request>', False, hostname, 'version', False)   
 
     def do_download_soft(self, arguments):
         """download_soft [version] [hostname]
@@ -77,7 +76,9 @@ class Panco(cmd.Cmd):
             print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
         version, hostname= args[:2]
-        self._set_command('<request><system><software><download><version>'+version+'</version></download></software></system></request>', False, hostname, 'line')
+        jobid = self._set_command('<request><system><software><download><version>'+version+'</version></download></software></system></request>', 
+                                        False, hostname, 'line', 'jobid ([0-9]+)')
+        self.jobid, self.hostname = str(jobid.group(1)), hostname                         
     
     def do_set_time(self, arguments):
         """set_time [hostname]
@@ -113,20 +114,27 @@ class Panco(cmd.Cmd):
 
         Show job [jobid] on [hostname]"""
         args = shlex.split(arguments)
-        if len(args) < 2  or not self.password or not self.username:
+        if len(args) == 0:
+            jobid, hostname= self.jobid, self.hostname
+        elif len(args) < 2  or not self.password or not self.username:
             print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
-        jobid, hostname = args[:2]
-        self._set_command('show jobs id "'+jobid+'"', True, hostname, 'result')
-
+        else:
+            jobid, hostname = args[:2]   
+        while True:
+            status = self._set_command('show jobs id "'+jobid+'"', True, hostname, 'result', False)
+            if status == 'OK' or len(args) == 2:
+                break
+            time.sleep(5)    
+        self.jobid, self.hostname = jobid, hostname
+        
     def do_show_system(self, arguments):
         """show_system [tag] [hostname] 
 
         Show system [tag] on [hostname]
         Tags: sw-version, uptime, hostname, ip-address, multi-vsys, operational-mode, devicename,
             serial, vm-uuid, vm-cpuid, vm-license, vm-mode, threat-version, wildfire-version """   
-        args = shlex.split(arguments)
-        
+        args = shlex.split(arguments)   
         if len(args) == 1:
             hostname = args[0]
             tag = 'sw-version'
@@ -136,7 +144,7 @@ class Panco(cmd.Cmd):
         else:
             tag, hostname= args[:2]
             
-        self._set_command('show system info', True, hostname, tag)        
+        self._set_command('show system info', True, hostname, tag, False)        
 
     def do_upgrade_soft(self, arguments):
         """upgrade_soft [version] [hostname]
@@ -147,7 +155,9 @@ class Panco(cmd.Cmd):
             print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
         version, hostname = args[:2]
-        self._set_command('<request><system><software><install><version>'+version+'</version></install></software></system></request>', False, hostname, 'line') 
+        jobid = self._set_command('<request><system><software><install><version>'+version+'</version></install></software></system></request>', 
+                                        False, hostname, 'line', 'jobid ([0-9]+)') 
+        self.jobid, self.hostname = str(jobid.group(1)), hostname
 
     def do_upgrade_soft_pandevice(self, arguments):
         """upgrade_soft_pandevice [version] [hostname] [dryrun]
@@ -192,7 +202,7 @@ class Panco(cmd.Cmd):
             print ("More arguments required (.i.e. tag: sw-version) or credentials not set (cred [user] [pass])")
             return False
         hostname= args[0]    
-        self._set_command('request restart system', True, hostname, 'line') 
+        self._set_command('request restart system', True, hostname, 'line', False) 
 
     def do_waitfor_url(self, arguments):
         """waitfor_portal [hostname] [sleep] [timeout]
@@ -207,7 +217,7 @@ class Panco(cmd.Cmd):
             print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
         elif len(args) > 2:
-            sleep, timeout, hostname= args[:3] 
+            hostname, sleep, timeout = args[:3] 
 
         url ='https://'+hostname
         sess = requests.Session()
@@ -254,9 +264,10 @@ class Panco(cmd.Cmd):
         time.sleep(1)
         print("Applying config on {hostname} with user {username} and password {password}...".format(hostname=hostname, username=self.username, password=self.password[:1]))
         xapi.commit(cmd="<commit></commit>",timeout=10)
-        print(xapi.status)     
+        print(xapi.status)    
 
-    def _set_command(self, command, cmd_xml, hostname, tag):  
+    def _set_command(self, command, cmd_xml, hostname, tag, pattern):  
+        result = False
         xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname))
         print('Running command on {hostname} with user {username} and password {password}...'.format(hostname=hostname, username=self.username, password=self.password[:1]))
         try:
@@ -267,8 +278,24 @@ class Panco(cmd.Cmd):
         if xapi.status == 'success':
             soup = BeautifulSoup(xapi.xml_result(),'html.parser')
             for line in soup.find_all(tag):
-                print(line.get_text())                           
+                result = line.get_text()  
+                print(result) 
+                if pattern:
+                    result= self._parso(pattern, result)                   
+        return result            
 
+
+    
+    def _parso(self, pattern, output):
+        """Example usage:
+        result= self._parso('jobid ([0-9]+)','Download job enqueued with jobid 248')
+        if result:
+            print result.group(1)"""
+        try:
+            return re.search(pattern, output)
+        except (TypeError, AttributeError, IndexError):
+            return False
+        
     def do_EOF(self, line):
         return True
 

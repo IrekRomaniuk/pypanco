@@ -107,12 +107,12 @@ Device xxxx attempt to install content version latest failed: ['Failed to update
 
 ```
 (Panco) waitfor_url 30 5 10.44.2.20
-No Response: Sleeping for 30s...Remaining 298
-No Response: Sleeping for 30s...Remaining 267
-No Response: Sleeping for 30s...Remaining 216
-No Response: Sleeping for 30s...Remaining 165
-Up but not auth, sleeping for 30s...Remaining 132
-Up but not auth, sleeping for 30s...Remaining 102
-Portal https://10.41.2.20 is up and running
+No Response: Sleeping for 30s...Remaining 298s
+No Response: Sleeping for 30s...Remaining 267s
+No Response: Sleeping for 30s...Remaining 216s
+No Response: Sleeping for 30s...Remaining 165s
+Up but not auth, sleeping for 30s...Remaining 132s
+Up but not auth, sleeping for 30s...Remaining 102s
+Portal https://10.44.2.20 is up and running
 (Panco)
 ```
