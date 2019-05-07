@@ -15,9 +15,6 @@ import requests, urllib3
 #from requests.adapters import HTTPAdapter
 #from requests.packages.urllib3.util.retry import Retry
 
-#xpath can be navigated on PAN OS on this path https://firewall_ip/api/
-deviceconfig_system_xpath = "/config/devices/entry[@name='localhost.localdomain']/deviceconfig/system"
-
 class Panco(cmd.Cmd):
     """Palo Alto Network toolset"""
 
@@ -90,6 +87,7 @@ class Panco(cmd.Cmd):
             return False
         timezone, ntp_primary, ntp_secondary= 'US/Eastern','10.34.21.215', '10.41.21.215'
         hostname = args[0]
+        xpath = "/config/devices/entry[@name='localhost.localdomain']/deviceconfig/system"
         config = """
         <timezone>{}</timezone>
         <ntp-servers>
@@ -101,7 +99,7 @@ class Panco(cmd.Cmd):
             </secondary-ntp-server>
         </ntp-servers>
         """.format(timezone,ntp_primary,ntp_secondary)
-        self._set_config(config, hostname)        
+        self._set_config(config, hostname, xpath)        
     
     #option for cmd help
     def help_set_time(self):
@@ -187,10 +185,26 @@ class Panco(cmd.Cmd):
             print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
         panorama, hostname= args[:2]
+        xpath = "/config/devices/entry[@name='localhost.localdomain']/deviceconfig/system"
         config = """
         <panorama-server>{}</panorama-server>
         """.format(panorama)
-        self._set_config(config, hostname)
+        self._set_config(config, hostname, xpath)
+
+    def do_set_admin(self, arguments):
+        """set_admin [hash] [hostname]
+        Change admin password
+        """
+        args = shlex.split(arguments)
+        if len(args) < 2  or not self.password or not self.username:
+            print ("More arguments required or credentials not set (cred [user] [pass])")
+            return False
+        hash, hostname= args[:2]
+        xpath="/config/mgt-config/users/entry[@name='admin']"
+        config = """
+        <phash>{}</phash>
+        """.format(hash)
+        self._set_config(config, hostname, xpath)    
 
     def do_restart(self, arguments):
         """restart [hostname] 
@@ -256,14 +270,22 @@ class Panco(cmd.Cmd):
                 time.sleep(sleep)   
         return response    
 
-    def _set_config(self, config, hostname):        
+    def _set_config(self, config, hostname, xpath):        
         xapi = pan.xapi.PanXapi(**self._get_pan_credentials(hostname))
-        xapi.set(xpath=deviceconfig_system_xpath,element=config)
+        try:
+            xapi.set(xpath=xpath,element=config)
+        except pan.xapi.PanXapiError as e:
+            print("{error}".format(error=e))
+            return False  
         time.sleep(3)
         print(xapi.status)
         time.sleep(1)
         print("Applying config on {hostname} with user {username} and password {password}...".format(hostname=hostname, username=self.username, password=self.password[:1]))
-        xapi.commit(cmd="<commit></commit>",timeout=10)
+        try:
+            xapi.commit(cmd="<commit></commit>",timeout=10)
+        except pan.xapi.PanXapiError as e:
+            print("{error}".format(error=e))
+            return False    
         print(xapi.status)    
 
     def _set_command(self, command, cmd_xml, hostname, tag, pattern):  

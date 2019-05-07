@@ -116,3 +116,23 @@ Up but not auth, sleeping for 30s...Remaining 102s
 Portal https://10.44.2.20 is up and running
 (Panco)
 ```
+
+### set_admin
+
+First find password hash
+
+```
+paloalto@PA-5060> request password-hash password paloalto123!
+
+$1$wpumhqdo$i8MXril672nvdOFVGrZGX0
+```
+
+Change admin password 
+
+```
+(Panco) set_admin $1$wpumhqdo$i8MXril672nvdOFVGrZGX0 10.41.2.20
+success
+Applying config on 10.41.2.20 with user paloalto and password n...
+success
+(Panco) show_system
+```
