@@ -130,9 +130,9 @@ $1$wpumhqdo$i8MXril672nvdOFVGrZGX0
 Change admin password 
 
 ```
-(Panco) set_admin $1$wpumhqdo$i8MXril672nvdOFVGrZGX0 10.41.2.20
+(Panco) set_admin $1$wpumhqdo$i8MXril672nvdOFVGrZGX0 10.44.2.20
 success
-Applying config on 10.41.2.20 with user paloalto and password n...
+Applying config on 10.44.2.20 with user paloalto and password n...
 success
 (Panco) show_system
 ```
