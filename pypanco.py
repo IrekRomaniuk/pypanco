@@ -191,16 +191,20 @@ class Panco(cmd.Cmd):
         """.format(panorama)
         self._set_config(config, hostname, xpath)
 
-    def do_set_admin(self, arguments):
-        """set_admin [hash] [hostname]
-        Change admin password
+    def do_set_user(self, arguments):
+        """set_user [hash] [hostname] [user]
+        Change user [user] password [hash] on [hostname]
         """
         args = shlex.split(arguments)
         if len(args) < 2  or not self.password or not self.username:
             print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
         hash, hostname= args[:2]
-        xpath="/config/mgt-config/users/entry[@name='admin']"
+        if len(args) > 2:
+            user = args[2]
+        else:
+            user = 'admin'    
+        xpath="/config/mgt-config/users/entry[@name='" + user + "']"
         config = """
         <phash>{}</phash>
         """.format(hash)
