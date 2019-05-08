@@ -69,6 +69,7 @@ class Panco(cmd.Cmd):
                 print ': '.join([str(item["name"]), str(item["ipAddress"])])
 
     def _az_cli(self, args_str):
+        #https://stackoverflow.com/questions/51546073/how-to-run-azure-cli-commands-using-python
         args = args_str.split()
         cli = get_default_cli()
         cli.invoke(args)

@@ -148,10 +148,10 @@ success
 
 ```
 Panco> az_ip A360Test-EastUS-Test-DC
-az01dc-paSCCM01-ip: 52.226.21.85
-az01dcpctxCCip524: 52.179.16.110
-az01dcpctxw10ip695: 52.170.96.185
-IS-Test-Kali3-V: 40.121.219.232
-PIP-az01dc-padc01-1: 40.117.62.201
+az01dc-ip: 12.26.21.85
+az01dcpct: 22.19.16.110
+az01dcpct: 42.10.96.185
+IS-Test-V: 42.21.219.232
+PIPaz01dc: 41.118.62.201
 
 ```
