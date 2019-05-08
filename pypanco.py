@@ -249,14 +249,14 @@ class Panco(cmd.Cmd):
         self._set_command('request restart system', True, hostname, 'line', False) 
 
     def do_waitfor_url(self, arguments):
-        """waitfor_portal [hostname] [sleep] [timeout]
+        """waitfor_portal [hostname] [sleep]s [timeout]min
 
-        Wait [timeout] until portal on [hostname] available and verify login every [sleep]"""   
+        Wait [timeout]min until portal on [hostname] available and verify login every [sleep]s"""   
         args = shlex.split(arguments)
         
         if len(args) == 1:
             hostname = args[0]
-            sleep, timeout = 3, 1
+            sleep, timeout = 10, 5
         elif len(args) <= 2 or not self.password or not self.username:
             print ("More arguments required or credentials not set (cred [user] [pass])")
             return False
@@ -267,7 +267,7 @@ class Panco(cmd.Cmd):
         sess = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=10)
         sess.mount('http://', adapter)
-        response = self._get_url(url, int(sleep), int(timeout)) # try url, sleep 3s, timeout is 1min
+        response = self._get_url(url, int(sleep), int(timeout)) # try url, sleep 10s, timeout is 5min
         if response == False:
             print("No Response from {url}".format(url=url))
         elif response.status_code == 200:   
@@ -289,14 +289,14 @@ class Panco(cmd.Cmd):
                 if response.status_code == 200:
                     return response
             except requests.exceptions:
-                print("Sleeping for {sleep}s...Remaining {remained}s".format(sleep=sleep, remained=int(timeout-time.time())))
+                print("Sleeping for {sleep}s...Remaining {remained}s".format(sleep=sleep, remained=int(abs(timeout-time.time()))))
                 time.sleep(sleep)
             except requests.exceptions.RequestException as e:
                 #print("{error}".format(error=e))
-                print("No Response: Sleeping for {sleep}s...Remaining {remained}s".format(sleep=sleep, remained=int(timeout-time.time())))
+                print("No Response: Sleeping for {sleep}s...Remaining {remained}s".format(sleep=sleep, remained=int(abs(timeout-time.time()))))
                 time.sleep(sleep) 
             if  response != False:  #and response.status_code != 200:   
-                print("Up but not auth, sleeping for {sleep}s...Remaining {remained}s".format(sleep=sleep, remained=int(timeout-time.time())))
+                print("Up but not auth, sleeping for {sleep}s...Remaining {remained}s".format(sleep=sleep, remained=int(abs(timeout-time.time()))))
                 time.sleep(sleep)   
         return response    
 
