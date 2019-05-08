@@ -12,14 +12,14 @@ import pan.xapi,time, sys, cmd, shlex, re
 from pandevice.base import PanDevice, pandevice
 from bs4 import BeautifulSoup
 import requests, urllib3
-#from requests.adapters import HTTPAdapter
-#from requests.packages.urllib3.util.retry import Retry
+from azure.cli.core import get_default_cli
+import tempfile
 
 class Panco(cmd.Cmd):
     """Palo Alto Network toolset"""
 
-    prompt = '(Panco) '
-    intro = "Palo Alto Network toolset, remember to setup credentails (cred [user] [pass])\n\n"
+    prompt = 'Panco> '
+    intro = "Palo Alto Network toolset, remember to setup firewall credentails (cred [user] [pass]) and login to azure (az login)\n\n"
     #doc_header = 'doc_header'
     #misc_header = 'misc_header'
     #undoc_header = 'undoc_header'
@@ -52,6 +52,31 @@ class Panco(cmd.Cmd):
         self.username = username   
         self.password = password
         print("Credentials for {username} setup".format(username = username))
+
+    def do_az_ip(self, arguments):
+        """Get IP address from resource group [rg], optional [name] """ 
+        args = shlex.split(arguments)       
+        if len(args) < 1:
+            print ("More arguments required")
+            return False  
+        elif len(args) > 1:
+            rg, name = args[:2]
+        else:
+            rg = args[0]
+        response = self._az_cli("network public-ip list -g " + rg)
+        for item in response:
+            if item["ipAddress"]:
+                print ': '.join([str(item["name"]), str(item["ipAddress"])])
+
+    def _az_cli(self, args_str):
+        args = args_str.split()
+        cli = get_default_cli()
+        cli.invoke(args)
+        if cli.result.result:
+            return cli.result.result
+        elif cli.result.error:
+            raise cli.result.error
+        return True    
         
     def do_check_soft(self, arguments):
         """check_soft [hostname]
@@ -282,7 +307,7 @@ class Panco(cmd.Cmd):
             print("{error}".format(error=e))
             return False  
         time.sleep(3)
-        print(xapi.status)
+        print("Config: {status}".format(status=xapi.status))
         time.sleep(1)
         print("Applying config on {hostname} with user {username} and password {password}...".format(hostname=hostname, username=self.username, password=self.password[:1]))
         try:
@@ -290,7 +315,7 @@ class Panco(cmd.Cmd):
         except pan.xapi.PanXapiError as e:
             print("{error}".format(error=e))
             return False    
-        print(xapi.status)    
+        print("Commit: {status}".format(status=xapi.status))   
 
     def _set_command(self, command, cmd_xml, hostname, tag, pattern):  
         result = False

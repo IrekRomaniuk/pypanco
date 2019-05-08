@@ -1,0 +1,6 @@
+azure-cli-core
+azure-cli
+pan-python
+pandevice
+requests
+bs4

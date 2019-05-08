@@ -1,6 +1,14 @@
 # pypanco
 Palo Alto Network toolset based on pan-python an pandevice
 
+### Requirements
+
+```
+# source ../../python-virtual-environments/pypanco/bin/activate (optional)
+pip install -r requirements.txt
+
+```
+
 ```
 $ python pypanco.py
 Palo Alto Network toolset
@@ -127,12 +135,23 @@ paloalto@PA-5060> request password-hash password paloalto123!
 $1$wpumhqdo$i8MXril672nvdOFVGrZGX0
 ```
 
-Change admin password 
+### Change password
 
 ```
-(Panco) set_admin $1$wpumhqdo$i8MXril672nvdOFVGrZGX0 10.44.2.20
+(Panco) set_user $1$wpumhqdo$i8MXril672nvdOFVGrZGX0 10.44.2.20
 success
 Applying config on 10.44.2.20 with user paloalto and password n...
 success
-(Panco) show_system
+```
+
+### az_ip
+
+```
+Panco> az_ip A360Test-EastUS-Test-DC
+az01dc-paSCCM01-ip: 52.226.21.85
+az01dcpctxCCip524: 52.179.16.110
+az01dcpctxw10ip695: 52.170.96.185
+IS-Test-Kali3-V: 40.121.219.232
+PIP-az01dc-padc01-1: 40.117.62.201
+
 ```
