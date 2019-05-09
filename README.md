@@ -21,7 +21,7 @@ Palo Alto Network toolset
 [cred]
 admin=admin
 password=password 
-api=$1$unewtnth$sEBF53iwYxXN8v5/QRciG.
+api=xxx
 ```
 
 ### help
