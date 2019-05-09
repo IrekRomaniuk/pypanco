@@ -1,3 +1,4 @@
 .*
 !/.gitignore
 .pypancorc
+pypanco*.ipynb
