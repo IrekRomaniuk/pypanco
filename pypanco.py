@@ -8,12 +8,13 @@ https://cyruslab.net/2017/11/12/pythonworking-with-palo-alto-firewall-api-with-p
 
 """
 
-import pan.xapi,time, sys, cmd, shlex, re
+import pan.xapi,time, sys, os, cmd, shlex, re
 from pandevice.base import PanDevice, pandevice
 from bs4 import BeautifulSoup
 import requests, urllib3
 from azure.cli.core import get_default_cli
 import tempfile
+from ConfigParser import SafeConfigParser
 
 class Panco(cmd.Cmd):
     """Palo Alto Network toolset"""
@@ -350,6 +351,16 @@ class Panco(cmd.Cmd):
         
     def do_EOF(self, line):
         return True
+
+    def emptyline(self): 
+        pass    
+
+    def preloop(self):
+        parser = SafeConfigParser()
+        if os.path.isfile('.pypancorc'):
+            parser.read('.pypancorc')
+            self.username = parser.get('cred', 'admin')
+            self.password = parser.get('cred', 'password')
 
     def postloop(self):
         print    
