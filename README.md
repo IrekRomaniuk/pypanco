@@ -15,6 +15,15 @@ Palo Alto Network toolset
 (Panco)Ctrl-D
 ```
 
+### optional config file with cred (.pypancorc)
+
+```
+[cred]
+admin=admin
+password=password 
+api=$1$unewtnth$sEBF53iwYxXN8v5/QRciG.
+```
+
 ### help
 
 ```
